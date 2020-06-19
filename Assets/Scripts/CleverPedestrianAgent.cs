@@ -36,9 +36,11 @@ public class CleverPedestrianAgent : Agent
     private bool[] inv;
     public float rangeMult = 10.0f;
     private float negRew;
-    private StreamWriter writer;
+    private StreamWriter writer1;
+    private StreamWriter writer2;
     public bool writeTrajectories = false;
-    private List<Coords> steps;
+    private List<Coords> steps1;
+    private List<Coords> steps2;
     void Start()
     {
         pedestrians = GameObject.FindGameObjectsWithTag("pedestrian");
@@ -51,8 +53,10 @@ public class CleverPedestrianAgent : Agent
         System.IO.StreamReader file = new System.IO.StreamReader("Assets/pixel_pos_interpolate_hotel.csv");
         if(writeTrajectories)
         {
-            writer = new StreamWriter("Assets/out.csv");
-            steps = new List<Coords>();
+            writer1 = new StreamWriter("Assets/out1.csv");
+            writer2 = new StreamWriter("Assets/out2.csv");
+            steps1 = new List<Coords>();
+            steps2 = new List<Coords>();
         }
         while ((line = file.ReadLine()) != null)
         {
@@ -89,6 +93,29 @@ public class CleverPedestrianAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        int firstRand = 0;
+        do
+        {
+            firstRand = UnityEngine.Random.Range(0, pid.Length);
+        } while (pid[firstRand] == null);
+        float spawnX = pid[firstRand][0].X * (FieldX + rangeMult);
+        float spawnZ = pid[firstRand][0].Y * (FieldX + rangeMult);
+        float goalX = pid[firstRand][pid[firstRand].Count - 1].X * (FieldX + rangeMult);
+        float goalZ = pid[firstRand][pid[firstRand].Count - 1].Y * (FieldX + rangeMult);
+        this.transform.localPosition = new Vector3(spawnX, 1.25f, spawnZ);
+        if (writeTrajectories)
+        {
+            steps1 = new List<Coords>();
+            steps2 = new List<Coords>();
+            for (int i = 0; i < pid[firstRand].Count; i++)
+            {
+                steps2.Add(new Coords(pid[firstRand][i].X, pid[firstRand][i].Y));
+            }
+            steps1.Add(new Coords(this.transform.localPosition.x / (FieldX + rangeMult), this.transform.localPosition.z / (FieldZ + rangeMult)));
+        }
+        target.localPosition = new Vector3(goalX, 0.5f, goalZ);
+        bestTransform = this.transform.localPosition;
+        negRew = 0.0f;
         List<int> randomValues = new List<int>();
         for(int i = 0; i<pedestrians.Length; i++)
         {
@@ -96,7 +123,7 @@ public class CleverPedestrianAgent : Agent
             do
             {
                 randomVal = UnityEngine.Random.Range(0, pid.Length);
-            } while ((!(randomValues.Count == 0) && randomValues.Contains(randomVal)) || pid[randomVal] == null);
+            } while ((!(randomValues.Count == 0) && randomValues.Contains(randomVal)) || pid[randomVal] == null || (i < pedestrians.Length/2 && Math.Abs(pid[randomVal][0].X * (FieldX + rangeMult) - spawnX) < 1 && Math.Abs(pid[randomVal][0].Y * (FieldX + rangeMult) - spawnZ) < 1) || (i >= pedestrians.Length / 2 && Math.Abs(pid[randomVal][0].Y * (FieldX + rangeMult) - spawnX) < 1 && Math.Abs(pid[randomVal][0].X * (FieldX + rangeMult) - spawnZ) < 1));
             randomValues.Add(randomVal);
             pIndex[i] = randomVal;
             cIndex[i] = 0;
@@ -111,6 +138,7 @@ public class CleverPedestrianAgent : Agent
             cIndex[i]++;
             inv[i] = true;
         }
+        /*
         float spawnX = UnityEngine.Random.Range(-18.0f, 18.0f);
         this.transform.localPosition = new Vector3(spawnX, 1.25f, -18);
         if (writeTrajectories)
@@ -121,6 +149,7 @@ public class CleverPedestrianAgent : Agent
         target.localPosition = new Vector3(-spawnX, 0.5f, 18);
         bestTransform = this.transform.localPosition;
         negRew = 0.0f;
+        */
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -191,7 +220,7 @@ public class CleverPedestrianAgent : Agent
         */
         if (writeTrajectories)
         {
-            steps.Add(new Coords(this.transform.localPosition.x/FieldX, this.transform.localPosition.z/FieldZ));
+            steps1.Add(new Coords(this.transform.localPosition.x/(FieldX + rangeMult), this.transform.localPosition.z/(FieldZ + rangeMult)));
         }
         float distanceToTarget = Vector3.Distance(this.transform.localPosition, target.localPosition);
         if (distanceToTarget < Vector3.Distance(bestTransform, target.localPosition))
@@ -219,22 +248,40 @@ public class CleverPedestrianAgent : Agent
             {
                 string xString = "";
                 string yString = "";
-                for(int i = 0; i < steps.Count; i++)
+                for(int i = 0; i < steps1.Count; i++)
                 {
                     if(i==0)
                     {
-                        xString = xString + steps[i].X;
-                        yString = yString + steps[i].Y;
+                        xString = xString + steps1[i].X;
+                        yString = yString + steps1[i].Y;
                     }
                     else
                     {
-                        xString = xString + "," + steps[i].X;
-                        yString = yString + "," + steps[i].Y;
+                        xString = xString + "," + steps1[i].X;
+                        yString = yString + "," + steps1[i].Y;
                     }
                 }
-                writer.WriteLine(xString);
-                writer.WriteLine(yString);
-                writer.Flush();
+                writer1.WriteLine(xString);
+                writer1.WriteLine(yString);
+                writer1.Flush();
+                xString = "";
+                yString = "";
+                for (int i = 0; i < steps2.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        xString = xString + steps2[i].X;
+                        yString = yString + steps2[i].Y;
+                    }
+                    else
+                    {
+                        xString = xString + "," + steps2[i].X;
+                        yString = yString + "," + steps2[i].Y;
+                    }
+                }
+                writer2.WriteLine(xString);
+                writer2.WriteLine(yString);
+                writer2.Flush();
             }
             EndEpisode();
         }

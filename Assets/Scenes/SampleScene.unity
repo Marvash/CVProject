@@ -318,7 +318,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 5022602860645237092, guid: ffa09457563f8334cb166705b8f214e2,
+      objectReference: {fileID: 5022602860645237092, guid: 2de9c955dd2b99941914b22e372cdb0b,
         type: 3}
     - target: {fileID: -8463868085407391031, guid: c5cd318ebb5d2ef49a85704a2594d2a1,
         type: 3}
@@ -330,13 +330,18 @@ PrefabInstance:
       propertyPath: m_InferenceDevice
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -8463868085407391031, guid: c5cd318ebb5d2ef49a85704a2594d2a1,
+        type: 3}
+      propertyPath: m_BehaviorType
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1082095318, guid: c5cd318ebb5d2ef49a85704a2594d2a1, type: 3}
       propertyPath: m_DetectableTags.Array.size
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1082095318, guid: c5cd318ebb5d2ef49a85704a2594d2a1, type: 3}
       propertyPath: m_RayLength
-      value: 5
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 1082095318, guid: c5cd318ebb5d2ef49a85704a2594d2a1, type: 3}
       propertyPath: m_DetectableTags.Array.data[1]
@@ -360,7 +365,7 @@ PrefabInstance:
     - target: {fileID: 7085142431442758496, guid: c5cd318ebb5d2ef49a85704a2594d2a1,
         type: 3}
       propertyPath: rangeMult
-      value: 6
+      value: 14
       objectReference: {fileID: 0}
     - target: {fileID: 7085142431442758496, guid: c5cd318ebb5d2ef49a85704a2594d2a1,
         type: 3}
